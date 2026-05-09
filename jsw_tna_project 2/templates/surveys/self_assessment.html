@@ -1,0 +1,228 @@
+{% extends 'surveys/base.html' %}
+{% load static %}
+{% block title %}{{ role }} Self-Assessment — {{ fn_data.label }} | JSW Motors TNA{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sticky-info {
+    position: sticky; top: 64px; z-index: 100;
+    background: {% if role == 'GET' %}linear-gradient(90deg,#065f46,#0f766e){% else %}linear-gradient(90deg,#4c1d95,#7c3aed){% endif %};
+    padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 3px solid {% if role == 'GET' %}#10b981{% else %}#a78bfa{% endif %};
+  }
+  .sticky-meta { display: flex; gap: 24px; align-items: center; }
+  .sticky-item span:first-child { font-size: 10px; color: rgba(255,255,255,.5); font-weight: 600; text-transform: uppercase; display: block; }
+  .sticky-item span:last-child  { font-size: 13px; color: #fff; font-weight: 700; }
+  .progress-bar-track { background: rgba(255,255,255,.2); border-radius: 99px; height: 6px; width: 200px; }
+  .progress-bar-fill  { background: {% if role == 'GET' %}#34d399{% else %}#c4b5fd{% endif %}; border-radius: 99px; height: 6px; transition: width .3s; }
+
+  .role-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: {% if role == 'GET' %}#d1fae5{% else %}#ede9fe{% endif %};
+    color: {% if role == 'GET' %}#065f46{% else %}#4c1d95{% endif %};
+    font-size: 12px; font-weight: 800; padding: 5px 16px; border-radius: 20px;
+  }
+  .comp-block { margin-bottom: 20px; }
+  .comp-block-header {
+    background: {% if role == 'GET' %}linear-gradient(90deg,#065f46,#0f766e){% else %}linear-gradient(90deg,#4c1d95,#7c3aed){% endif %};
+  }
+  .scale-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .scale-opt { position: relative; }
+  .scale-opt input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .scale-opt label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 76px; min-height: 60px; border: 2px solid var(--border);
+    border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600;
+    color: var(--text-mid); transition: all .15s; padding: 6px 4px; text-align: center;
+    line-height: 1.2; background: #fff;
+  }
+  .scale-num { font-size: 20px; font-weight: 900; line-height: 1; }
+  .scale-opt input:checked + label {
+    border-color: {% if role == 'GET' %}#0f766e{% else %}#7c3aed{% endif %};
+    background: {% if role == 'GET' %}#0f766e{% else %}#7c3aed{% endif %}; color: #fff;
+  }
+  .scale-opt label:hover {
+    border-color: {% if role == 'GET' %}#0f766e{% else %}#7c3aed{% endif %};
+    background: {% if role == 'GET' %}#d1fae5{% else %}#ede9fe{% endif %};
+    color: {% if role == 'GET' %}#065f46{% else %}#4c1d95{% endif %};
+  }
+  .category-divider { display: flex; align-items: center; gap: 14px; margin: 28px 0 18px; }
+  .category-divider hr { flex: 1; border: none; border-top: 2px solid var(--border); }
+  .category-tag {
+    background: {% if role == 'GET' %}#0f766e{% else %}#7c3aed{% endif %};
+    color: #fff; font-size: 11px; font-weight: 800;
+    padding: 5px 16px; border-radius: 20px; white-space: nowrap;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="sticky-info">
+  <div class="sticky-meta">
+    <div class="sticky-item"><span>Survey</span><span>{{ role }} Self-Assessment</span></div>
+    <div class="sticky-item"><span>Function</span><span>{{ fn_data.icon }} {{ fn_data.label }}</span></div>
+    <div class="sticky-item"><span>Respondent</span><span>{{ name }} ({{ emp_code }})</span></div>
+  </div>
+  <div>
+    <div style="font-size:10px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;margin-bottom:4px">Progress</div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page-header" style="background:{% if role == 'GET' %}linear-gradient(135deg,#065f46,#0f766e){% else %}linear-gradient(135deg,#4c1d95,#7c3aed){% endif %}">
+  <div class="container">
+    <h1>{% if role == 'GET' %}🔧{% else %}📊{% endif %} {{ role }} Self-Assessment — {{ fn_data.label }}</h1>
+    <p>Rate your <strong>current proficiency level</strong> honestly for each competency. This helps tailor your training path.</p>
+  </div>
+</div>
+
+<div class="container content-wrap">
+
+  {% if error %}
+    <div class="alert alert-error">⚠️ {{ error }}</div>
+  {% endif %}
+
+  <!-- Scale guide -->
+  <div class="card" style="margin-bottom:28px">
+    <div class="card-body" style="padding:20px 28px">
+      <div class="section-label">📊 Proficiency Scale — Self-Rating Guide</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px">
+        {% for p in prof_scale %}
+          <div style="background:var(--jsw-light);border-radius:10px;padding:12px 18px;font-size:12px;min-width:160px">
+            <div style="font-size:20px;font-weight:900;color:var(--jsw-navy)">{{ p.level }}</div>
+            <div style="font-weight:700;color:var(--jsw-navy);margin:2px 0">{{ p.label }}</div>
+            <div style="color:var(--text-mid);font-size:11px">{{ p.desc }}</div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="alert alert-info" style="margin-top:18px;margin-bottom:0">
+        💡 <strong>Tip:</strong> Be honest — there are no right or wrong answers. Your self-assessment is used only to identify training priorities for your cohort.
+      </div>
+    </div>
+  </div>
+
+  <form method="POST" id="saForm">
+    {% csrf_token %}
+
+    <!-- Details -->
+    <div class="card" style="margin-bottom:28px">
+      <div class="card-header">
+        <span style="font-size:20px">👤</span>
+        <h2>Your Information</h2>
+        <span style="margin-left:auto"><span class="role-pill">{% if role == 'GET' %}🔧{% else %}📊{% endif %} {{ role }}</span></span>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="required">Employee Name</label>
+            <input type="text" name="employee_name" value="{{ name }}" required>
+          </div>
+          <div class="form-group">
+            <label class="required">Employee Code</label>
+            <input type="text" name="employee_code" value="{{ emp_code }}" required>
+          </div>
+          <div class="form-group">
+            <label>Function</label>
+            <input type="text" value="{{ fn_data.label }}" readonly style="background:#f1f5f9;color:var(--text-mid)">
+          </div>
+          <div class="form-group">
+            <label class="required">Date</label>
+            <input type="date" name="date" required id="dateField">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Competency self-rating -->
+    <div class="card" style="margin-bottom:28px">
+      <div class="card-header">
+        <span style="font-size:20px">{% if role == 'GET' %}🔧{% else %}📊{% endif %}</span>
+        <h2>{{ role }} Competency Self-Assessment — {{ fn_data.label }}</h2>
+        <span style="margin-left:auto;font-size:12px;color:var(--text-mid)">{{ comps|length }} competencies</span>
+      </div>
+      <div class="card-body">
+
+        {% with prev_cat="" %}
+        {% for comp in comps %}
+
+          {% if comp.category != prev_cat %}
+            <div class="category-divider">
+              <hr>
+              <span class="category-tag">
+                {% if comp.category == 'Technical' %}⚙️ Technical Competencies
+                {% else %}🧠 Behavioural Competencies{% endif %}
+              </span>
+              <hr>
+            </div>
+          {% endif %}
+
+          <div class="comp-block">
+            <div class="comp-block-header">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="comp-code">{{ comp.code }}</span>
+                {% if comp.ev_critical %}<span class="badge badge-ev">⚡ EV Critical</span>{% endif %}
+              </div>
+              <div style="flex:1">
+                <div class="comp-name">{{ comp.name }}</div>
+                <div class="comp-kpi">KPI Link: {{ comp.kpi_link }}</div>
+              </div>
+              <span class="badge {% if comp.category == 'Technical' %}badge-tech{% else %}badge-behav{% endif %}">{{ comp.category }}</span>
+            </div>
+            <div class="comp-body">
+              <div class="comp-desc">{{ comp.description }}</div>
+              <div class="rating-label" style="margin-bottom:10px">
+                Rate your current proficiency level
+                <span style="font-size:11px;color:var(--text-light);font-weight:400">(1 = Awareness → 5 = Expert)</span>
+              </div>
+              <div class="scale-row">
+                {% for p in prof_scale %}
+                  <div class="scale-opt">
+                    <input type="radio" name="level_{{ comp.code }}" id="l_{{ comp.code }}_{{ p.level }}" value="{{ p.level }}" required>
+                    <label for="l_{{ comp.code }}_{{ p.level }}">
+                      <span class="scale-num">{{ p.level }}</span>
+                      <span>{{ p.label }}</span>
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          {% with prev_cat=comp.category %}{% endwith %}
+        {% endfor %}
+        {% endwith %}
+
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:16px;padding-bottom:40px">
+      <a href="/" class="btn btn-outline">← Back</a>
+      <button type="submit" class="btn btn-lg" id="submitBtn"
+        style="background:{% if role == 'GET' %}#0f766e{% else %}#7c3aed{% endif %};color:#fff;border:none;">
+        Submit Self-Assessment ✓
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('dateField').valueAsDate = new Date();
+function updateProgress() {
+  const names = [...new Set([...document.querySelectorAll('input[type=radio]')].map(r=>r.name))];
+  const done  = names.filter(n => document.querySelector(`input[name="${n}"]:checked`)).length;
+  document.getElementById('progressBar').style.width = (names.length ? Math.round(done/names.length*100) : 0) + '%';
+}
+document.addEventListener('change', updateProgress);
+updateProgress();
+document.getElementById('saForm').addEventListener('submit', function(){
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'Submitting…'; btn.disabled = true;
+});
+</script>
+{% endblock %}

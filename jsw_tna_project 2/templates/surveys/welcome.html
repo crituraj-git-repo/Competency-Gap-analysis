@@ -1,0 +1,281 @@
+{% extends 'surveys/base.html' %}
+{% load static %}
+{% block title %}JSW Motors — Competency TNA Portal{% endblock %}
+
+{% block extra_head %}
+<style>
+  body { background: var(--jsw-navy); }
+  .welcome-wrap {
+    min-height: calc(100vh - 64px);
+    display: flex; flex-direction: column;
+    background: linear-gradient(160deg, #0f1e3d 0%, #1A2D5A 45%, #2E4B8F 100%);
+  }
+  .hero {
+    position: relative; overflow: hidden;
+    padding: 50px 40px 0; color: #fff;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background-image: url("{% static 'images/jsw_hq1.jpg' %}");
+    background-size: cover; background-position: center;
+    opacity: .10;
+  }
+  .hero-inner { position: relative; max-width: 1100px; margin: 0 auto; display: flex; gap: 60px; align-items: flex-start; }
+  .hero-left  { flex: 1; min-width: 0; }
+  .hero-right { width: 420px; flex-shrink: 0; }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(200,16,46,.85); color: #fff;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 5px 14px; border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .hero-h1 { font-size: 42px; font-weight: 900; line-height: 1.1; letter-spacing: -.5px; margin-bottom: 18px; }
+  .hero-h1 span { color: var(--jsw-gold); }
+  .hero-sub { color: rgba(255,255,255,.7); font-size: 15px; line-height: 1.7; max-width: 520px; margin-bottom: 32px; }
+  .hero-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+  .stat-box {
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px; padding: 16px 22px; min-width: 130px;
+  }
+  .stat-num { font-size: 28px; font-weight: 800; color: var(--jsw-gold); }
+  .stat-lbl { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 2px; }
+
+  /* steps */
+  .steps-section { padding: 40px 40px 0; }
+  .steps-inner { max-width: 1100px; margin: 0 auto; }
+  .steps-title { color: rgba(255,255,255,.7); font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 18px; }
+  .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .step-card {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px; padding: 20px; color: #fff;
+  }
+  .step-num { font-size: 28px; font-weight: 900; color: var(--jsw-gold); line-height: 1; margin-bottom: 8px; }
+  .step-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .step-desc { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.5; }
+
+  /* form card */
+  .form-card {
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    overflow: hidden;
+  }
+  .form-card-header {
+    background: linear-gradient(135deg, var(--jsw-navy), var(--jsw-blue));
+    padding: 24px 28px; border-bottom: 3px solid var(--jsw-red);
+  }
+  .form-card-header h2 { color: #fff; font-size: 18px; font-weight: 800; }
+  .form-card-header p  { color: rgba(255,255,255,.65); font-size: 12px; margin-top: 4px; }
+  .form-card-body { padding: 28px; }
+  .fn-info {
+    margin-top: 16px; padding: 12px 16px;
+    background: var(--jsw-light); border-radius: 8px;
+    font-size: 12px; color: var(--jsw-navy); line-height: 1.5; display: none;
+  }
+  .role-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  .role-card-opt { position: relative; }
+  .role-card-opt input { position: absolute; opacity: 0; }
+  .role-card-opt label {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 8px; border: 2px solid var(--border);
+    border-radius: 10px; cursor: pointer; font-size: 11px;
+    font-weight: 600; color: var(--text-mid); text-align: center;
+    transition: all .15s; line-height: 1.3; gap: 4px;
+  }
+  .role-card-opt input:checked + label {
+    border-color: var(--jsw-blue); background: var(--jsw-blue); color: #fff;
+  }
+  .role-card-opt label:hover { border-color: var(--jsw-blue); background: var(--jsw-light); color: var(--jsw-navy); }
+  .role-icon { font-size: 22px; }
+
+  /* bottom band */
+  .bottom-band { padding: 40px; flex: 1; }
+  .bottom-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .info-card {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px; padding: 22px; color: #fff;
+  }
+  .info-icon { font-size: 28px; margin-bottom: 10px; }
+  .info-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .info-desc  { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .hero-inner { flex-direction: column; }
+    .hero-right { width: 100%; }
+    .steps-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-inner { grid-template-columns: 1fr; }
+    .hero-h1 { font-size: 28px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-inner">
+
+      <div class="hero-left">
+        <div class="hero-eyebrow">🎯 Competency Training Needs Analysis</div>
+        <h1 class="hero-h1">Building the <span>Competency Blueprint</span><br>for JSW Motors</h1>
+        <p class="hero-sub">
+          A structured survey to map competency priorities across all 9 functions — enabling
+          precision L&D design, targeted trainee development and data-driven gap closure
+          aligned to JSW Motors' FY2026–2030 Scorecard.
+        </p>
+        <div class="hero-stats">
+          <div class="stat-box"><div class="stat-num">9</div><div class="stat-lbl">Functions Covered</div></div>
+          <div class="stat-box"><div class="stat-num">120+</div><div class="stat-lbl">Competencies Mapped</div></div>
+          <div class="stat-box"><div class="stat-num">3</div><div class="stat-lbl">Respondent Roles</div></div>
+          <div class="stat-box"><div class="stat-num">5-pt</div><div class="stat-lbl">Proficiency Scale</div></div>
+        </div>
+      </div>
+
+      <!-- FORM CARD -->
+      <div class="hero-right">
+        <div class="form-card">
+          <div class="form-card-header">
+            <h2>🚀 Begin Your Survey</h2>
+            <p>Fill in your details and the correct survey will open</p>
+          </div>
+          <div class="form-card-body">
+            {% if error %}
+              <div class="alert alert-error">⚠️ {{ error }}</div>
+            {% endif %}
+            <form method="POST" id="welcomeForm">
+              {% csrf_token %}
+
+              <div class="form-group" style="margin-bottom:16px">
+                <label class="required">Employee Name</label>
+                <input type="text" name="name" placeholder="Full Name" required value="{{ post.name|default:'' }}">
+              </div>
+
+              <div class="form-group" style="margin-bottom:16px">
+                <label class="required">Employee Code</label>
+                <input type="text" name="emp_code" placeholder="e.g. JSWM-2025-001" required value="{{ post.emp_code|default:'' }}">
+              </div>
+
+              <div class="form-group" style="margin-bottom:16px">
+                <label class="required">Your Role</label>
+                <div class="role-cards">
+                  <div class="role-card-opt">
+                    <input type="radio" name="role" id="r_fh" value="FH" {% if post.role == 'FH' %}checked{% endif %} required>
+                    <label for="r_fh"><span class="role-icon">👔</span>Functional Head / GM</label>
+                  </div>
+                  <div class="role-card-opt">
+                    <input type="radio" name="role" id="r_get" value="GET" {% if post.role == 'GET' %}checked{% endif %}>
+                    <label for="r_get"><span class="role-icon">🔧</span>Graduate Engineer Trainee</label>
+                  </div>
+                  <div class="role-card-opt">
+                    <input type="radio" name="role" id="r_mt" value="MT" {% if post.role == 'MT' %}checked{% endif %}>
+                    <label for="r_mt"><span class="role-icon">📊</span>Management Trainee</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom:20px">
+                <label class="required">Your Function</label>
+                <select name="function" id="fnSelect" required>
+                  <option value="">— Select Function —</option>
+                  {% for key, label in functions %}
+                    <option value="{{ key }}" {% if post.function == key %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                <div class="fn-info" id="fnInfo"></div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-lg" style="width:100%">
+                Continue to Survey →
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="steps-section">
+    <div class="steps-inner">
+      <div class="steps-title">📋 How It Works</div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-title">Enter Your Details</div>
+          <div class="step-desc">Provide your name, employee code, role and the function you belong to.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-title">Auto-Routed Survey</div>
+          <div class="step-desc">FH → Functional Head Questionnaire. GET/MT → Role-specific Self-Assessment.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-title">Rate Competencies</div>
+          <div class="step-desc">FH rates importance + desired levels. GET/MT rates their current proficiency.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">04</div>
+          <div class="step-title">Gap Analysis Generated</div>
+          <div class="step-desc">Admin dashboard auto-computes gaps and training priority recommendations.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO CARDS -->
+  <div class="bottom-band">
+    <div class="bottom-inner">
+      <div class="info-card">
+        <div class="info-icon">👔</div>
+        <div class="info-title">Functional Heads / GMs</div>
+        <div class="info-desc">You will rate the importance of each competency for your function AND set the desired proficiency level you expect GET and MT trainees to achieve. You will also answer 4 qualitative questions about training priorities.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🔧</div>
+        <div class="info-title">Graduate Engineer Trainees (GET)</div>
+        <div class="info-desc">You will self-assess your current proficiency level on each technical and behavioural competency relevant to the function you have selected. Be honest — this helps personalise your training journey.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">📊</div>
+        <div class="info-title">Management Trainees (MT)</div>
+        <div class="info-desc">You will self-assess your current proficiency on the competencies for your selected function. This data is used to design targeted L&D interventions for your cohort's unique gaps.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const FN_DESC = {
+  sales_marketing:  "Sales & Marketing — Covers sales strategy, CRM, digital marketing, dealer network, brand building and after-sales for JSW Motors' EV products.",
+  engineering:      "Engineering — Covers EV powertrain, functional safety, DVP, DFMEA, cost engineering, software systems and homologation.",
+  new_product_dev:  "New Product Development — Covers program management, VoC, competitive benchmarking, ADAS, OTA and localisation strategy.",
+  finance:          "Finance — Covers financial modelling, cost controlling, CAPEX governance, working capital, Ind AS reporting and statutory compliance.",
+  hr:               "Human Resources — Covers talent acquisition, L&D design, HR analytics, compliance, succession planning and culture building.",
+  procurement:      "Procurement & Localisation — Covers localisation strategy, should-costing, supplier quality, strategic sourcing and ESG procurement.",
+  scm_logistics:    "SCM & Logistics — Covers demand planning, S&OP, inventory optimisation, OTIF logistics and spare parts after-market supply chain.",
+  it_digital:       "IT & Digital — Covers ERP/MES management, cybersecurity, connected vehicle OTA, BI analytics and digital transformation.",
+  manufacturing:    "Manufacturing — Covers EV plant ramp, HV safety, OEE/TPM, quality systems, lean manufacturing, EHS and shop floor leadership.",
+};
+document.getElementById('fnSelect').addEventListener('change', function () {
+  const info = document.getElementById('fnInfo');
+  if (this.value && FN_DESC[this.value]) {
+    info.style.display = 'block';
+    info.textContent = FN_DESC[this.value];
+  } else {
+    info.style.display = 'none';
+  }
+});
+// If pre-selected on load
+(function(){
+  const sel = document.getElementById('fnSelect');
+  if (sel.value) sel.dispatchEvent(new Event('change'));
+})();
+</script>
+{% endblock %}

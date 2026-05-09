@@ -1,0 +1,13 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput"
+
+[deploy]
+startCommand = "gunicorn jsw_tna.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[variables]
+DEBUG = "False"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "JSW@TNA2025"

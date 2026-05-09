@@ -1,0 +1,321 @@
+{% extends 'surveys/base.html' %}
+{% load static %}
+{% block title %}FHQ — {{ fn_data.label }} | JSW Motors TNA{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sticky-info {
+    position: sticky; top: 64px; z-index: 100;
+    background: linear-gradient(90deg, var(--jsw-navy), var(--jsw-blue));
+    padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 3px solid var(--jsw-red);
+  }
+  .sticky-meta { display: flex; gap: 24px; align-items: center; }
+  .sticky-item { display: flex; flex-direction: column; }
+  .sticky-item span:first-child { font-size: 10px; color: rgba(255,255,255,.5); font-weight: 600; text-transform: uppercase; }
+  .sticky-item span:last-child  { font-size: 13px; color: #fff; font-weight: 700; }
+  .progress-bar-wrap { width: 200px; }
+  .progress-bar-track { background: rgba(255,255,255,.2); border-radius: 99px; height: 6px; }
+  .progress-bar-fill  { background: var(--jsw-gold); border-radius: 99px; height: 6px; transition: width .3s; }
+
+  .comp-block { margin-bottom: 22px; }
+  .rating-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .rating-group {}
+  .rating-group .rating-label { color: var(--jsw-navy); font-weight: 700; font-size: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .scale-hint { font-size: 10px; color: var(--text-light); font-weight: 400; }
+
+  .open-q-block {
+    background: linear-gradient(135deg, #f8faff, #eff6ff);
+    border: 1px solid #bfdbfe; border-radius: 12px; padding: 24px;
+    margin-bottom: 20px;
+  }
+  .open-q-num { display: inline-block; background: var(--jsw-blue); color: #fff; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; }
+  .open-q-text { font-weight: 700; color: var(--text-dark); font-size: 14px; margin-bottom: 12px; line-height: 1.5; }
+
+  .category-divider {
+    display: flex; align-items: center; gap: 14px; margin: 28px 0 18px;
+  }
+  .category-divider hr { flex: 1; border: none; border-top: 2px solid var(--border); }
+  .category-tag {
+    background: var(--jsw-navy); color: #fff; font-size: 11px;
+    font-weight: 800; padding: 5px 16px; border-radius: 20px; white-space: nowrap;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Sticky info bar -->
+<div class="sticky-info">
+  <div class="sticky-meta">
+    <div class="sticky-item">
+      <span>Survey</span><span>Functional Head Questionnaire</span>
+    </div>
+    <div class="sticky-item">
+      <span>Function</span><span>{{ fn_data.icon }} {{ fn_data.label }}</span>
+    </div>
+    <div class="sticky-item">
+      <span>Respondent</span><span>{{ name }} ({{ emp_code }})</span>
+    </div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div style="font-size:10px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;margin-bottom:4px">
+      Completion Progress
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Page header -->
+<div class="page-header">
+  <div class="container">
+    <h1>📋 Functional Head Questionnaire — {{ fn_data.label }}</h1>
+    <p>{{ fn_data.head_title }} &nbsp;|&nbsp; Rate importance, desired GET level, and desired MT level for each competency</p>
+  </div>
+</div>
+
+<div class="container content-wrap">
+
+  {% if error %}
+    <div class="alert alert-error">⚠️ {{ error }}</div>
+  {% endif %}
+
+  <!-- Scale legend -->
+  <div class="card" style="margin-bottom:28px">
+    <div class="card-body" style="padding:20px 28px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <div class="section-label">📊 Proficiency Scale (Desired Levels)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+            {% for p in prof_scale %}
+              <div style="background:var(--jsw-light);border-radius:8px;padding:8px 14px;font-size:12px">
+                <strong style="color:var(--jsw-navy)">{{ p.level }} — {{ p.label }}</strong>
+                <div style="color:var(--text-mid);font-size:11px;margin-top:2px">{{ p.desc }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div>
+          <div class="section-label">⭐ Importance Scale</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+            {% for i in imp_scale %}
+              <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 14px;font-size:12px">
+                <strong style="color:#9a3412">{{ i.level }} — {{ i.label }}</strong>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="POST" id="fhqForm">
+    {% csrf_token %}
+
+    <!-- Respondent Details -->
+    <div class="card" style="margin-bottom:28px">
+      <div class="card-header">
+        <span style="font-size:20px">👤</span>
+        <h2>Respondent Information</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="required">Employee Name</label>
+            <input type="text" name="employee_name" value="{{ name }}" required>
+          </div>
+          <div class="form-group">
+            <label class="required">Employee Code</label>
+            <input type="text" name="employee_code" value="{{ emp_code }}" required>
+          </div>
+          <div class="form-group">
+            <label>Designation</label>
+            <input type="text" name="designation" placeholder="e.g. VP Sales & Marketing">
+          </div>
+          <div class="form-group">
+            <label>Department / Sub-Function</label>
+            <input type="text" name="department" placeholder="e.g. Digital Marketing">
+          </div>
+          <div class="form-group">
+            <label class="required">Date</label>
+            <input type="date" name="date" required id="dateField">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Competency Rating -->
+    <div class="card" style="margin-bottom:28px">
+      <div class="card-header">
+        <span style="font-size:20px">🎯</span>
+        <h2>Part A — Competency Priority Mapping</h2>
+        <span style="margin-left:auto;font-size:12px;color:var(--text-mid)">
+          {{ comps|length }} competencies &nbsp;|&nbsp; Function: {{ fn_data.label }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info" style="margin-bottom:24px">
+          ℹ️ For each competency below, rate: <strong>(1) Importance</strong> to your function,
+          <strong>(2) Desired Proficiency Level for GET</strong> trainees, and
+          <strong>(3) Desired Proficiency Level for MT</strong> trainees.
+        </div>
+
+        {% with prev_cat="" %}
+        {% for comp in comps %}
+
+          {% if comp.category != prev_cat %}
+            <div class="category-divider">
+              <hr>
+              <span class="category-tag">
+                {% if comp.category == 'Technical' %}⚙️ Technical Competencies
+                {% else %}🧠 Behavioural Competencies{% endif %}
+              </span>
+              <hr>
+            </div>
+          {% endif %}
+
+          <div class="comp-block" data-comp="{{ comp.code }}">
+            <div class="comp-block-header">
+              <div>
+                <span class="comp-code">{{ comp.code }}</span>
+                {% if comp.ev_critical %}
+                  <span class="badge badge-ev" style="margin-left:8px">⚡ EV Critical</span>
+                {% endif %}
+              </div>
+              <div style="flex:1">
+                <div class="comp-name">{{ comp.name }}</div>
+                <div class="comp-kpi">KPI Link: {{ comp.kpi_link }}</div>
+              </div>
+              <span class="badge {% if comp.category == 'Technical' %}badge-tech{% else %}badge-behav{% endif %}">
+                {{ comp.category }}
+              </span>
+            </div>
+            <div class="comp-body">
+              <div class="comp-desc">{{ comp.description }}</div>
+              <div class="rating-cols">
+
+                <!-- Importance -->
+                <div class="rating-group">
+                  <div class="rating-label">⭐ Importance to Function
+                    <span class="scale-hint">(1=Low → 5=Critical)</span>
+                  </div>
+                  <div class="scale-row">
+                    {% for i in imp_scale %}
+                      <div class="scale-opt">
+                        <input type="radio" name="imp_{{ comp.code }}" id="imp_{{ comp.code }}_{{ i.level }}" value="{{ i.level }}" required>
+                        <label for="imp_{{ comp.code }}_{{ i.level }}">
+                          <span class="scale-num">{{ i.level }}</span>
+                          <span>{{ i.label }}</span>
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Desired GET -->
+                <div class="rating-group">
+                  <div class="rating-label">🔧 Desired Level — GET
+                    <span class="scale-hint">(1=Awareness → 5=Expert)</span>
+                  </div>
+                  <div class="scale-row">
+                    {% for p in prof_scale %}
+                      <div class="scale-opt">
+                        <input type="radio" name="dget_{{ comp.code }}" id="dget_{{ comp.code }}_{{ p.level }}" value="{{ p.level }}" required>
+                        <label for="dget_{{ comp.code }}_{{ p.level }}">
+                          <span class="scale-num">{{ p.level }}</span>
+                          <span>{{ p.label }}</span>
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Desired MT -->
+                <div class="rating-group">
+                  <div class="rating-label">📊 Desired Level — MT
+                    <span class="scale-hint">(1=Awareness → 5=Expert)</span>
+                  </div>
+                  <div class="scale-row">
+                    {% for p in prof_scale %}
+                      <div class="scale-opt">
+                        <input type="radio" name="dmt_{{ comp.code }}" id="dmt_{{ comp.code }}_{{ p.level }}" value="{{ p.level }}" required>
+                        <label for="dmt_{{ comp.code }}_{{ p.level }}">
+                          <span class="scale-num">{{ p.level }}</span>
+                          <span>{{ p.label }}</span>
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          {% with prev_cat=comp.category %}{% endwith %}
+        {% endfor %}
+        {% endwith %}
+
+      </div>
+    </div>
+
+    <!-- Open Questions -->
+    <div class="card" style="margin-bottom:28px">
+      <div class="card-header">
+        <span style="font-size:20px">💬</span>
+        <h2>Part B — Qualitative Insights</h2>
+      </div>
+      <div class="card-body">
+        {% for q in open_qs %}
+          <div class="open-q-block">
+            <span class="open-q-num">Q{{ forloop.counter }}</span>
+            <div class="open-q-text">{{ q.text }}</div>
+            <textarea name="{{ q.key }}" rows="4"
+              placeholder="Share your perspective…"></textarea>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div style="display:flex;justify-content:center;gap:16px;padding-bottom:40px">
+      <a href="/" class="btn btn-outline">← Back to Home</a>
+      <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+        Submit Questionnaire ✓
+      </button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Set today's date
+document.getElementById('dateField').valueAsDate = new Date();
+
+// Progress bar
+function updateProgress() {
+  const radios = document.querySelectorAll('input[type=radio]');
+  const groups = {};
+  radios.forEach(r => { groups[r.name] = true; });
+  const total = Object.keys(groups).length;
+  const answered = Object.keys(groups).filter(g =>
+    document.querySelector(`input[name="${g}"]:checked`)
+  ).length;
+  const pct = total > 0 ? Math.round(answered / total * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+document.addEventListener('change', updateProgress);
+updateProgress();
+
+// Submit confirmation
+document.getElementById('fhqForm').addEventListener('submit', function(e) {
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'Submitting…';
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

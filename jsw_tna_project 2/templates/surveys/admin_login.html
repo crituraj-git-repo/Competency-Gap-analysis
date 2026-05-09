@@ -1,0 +1,33 @@
+{% extends 'surveys/base.html' %}
+{% load static %}
+{% block title %}Admin Login — JSW Motors TNA{% endblock %}
+{% block content %}
+<div style="min-height:calc(100vh - 130px);display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#0f1e3d,#1A2D5A,#2E4B8F)">
+  <div style="width:100%;max-width:420px;padding:24px">
+    <div style="text-align:center;margin-bottom:32px">
+      <img src="{% static 'images/jsw_logo.jpg' %}" alt="JSW" style="height:50px;margin-bottom:12px">
+      <h1 style="color:#fff;font-size:22px;font-weight:800">Admin Portal</h1>
+      <p style="color:rgba(255,255,255,.6);font-size:13px">JSW Motors Competency TNA Dashboard</p>
+    </div>
+    <div style="background:#fff;border-radius:16px;padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+      <form method="POST">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom:18px">
+          <label class="required">Username</label>
+          <input type="text" name="username" placeholder="Admin username" required autofocus>
+        </div>
+        <div class="form-group" style="margin-bottom:24px">
+          <label class="required">Password</label>
+          <input type="password" name="password" placeholder="Admin password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Login to Dashboard →</button>
+      </form>
+    </div>
+    <div style="text-align:center;margin-top:20px">
+      <a href="/" style="color:rgba(255,255,255,.5);font-size:12px;text-decoration:none">← Back to Survey Portal</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

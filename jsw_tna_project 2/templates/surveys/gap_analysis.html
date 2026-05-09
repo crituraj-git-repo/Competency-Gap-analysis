@@ -1,0 +1,170 @@
+{% extends 'surveys/base.html' %}
+{% block title %}Gap Analysis — {{ fn_data.label }} | JSW Motors TNA{% endblock %}
+
+{% block extra_head %}
+<style>
+  .fn-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:28px; }
+  .fn-tab {
+    padding:8px 18px; border-radius:20px; font-size:12px; font-weight:700;
+    text-decoration:none; border:2px solid var(--border); color:var(--text-mid);
+    transition:all .15s;
+  }
+  .fn-tab.active { background:var(--jsw-navy); color:#fff; border-color:var(--jsw-navy); }
+  .fn-tab:hover  { border-color:var(--jsw-blue); color:var(--jsw-navy); }
+
+  .summary-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:28px; }
+  .sum-card {
+    background:var(--card-bg); border-radius:12px; padding:20px; text-align:center;
+    border:1px solid var(--border); box-shadow:var(--shadow-sm);
+  }
+  .sum-num { font-size:32px; font-weight:900; line-height:1; }
+  .sum-lbl { font-size:12px; color:var(--text-mid); margin-top:4px; font-weight:600; }
+
+  .gap-high   { background:#fef2f2 !important; color:#991b1b !important; font-weight:800; }
+  .gap-mid    { background:#fffbeb !important; color:#92400e !important; font-weight:700; }
+  .gap-low    { background:#f0fdf4 !important; color:#166534 !important; font-weight:700; }
+  .gap-none   { color:var(--text-light); font-size:12px; }
+
+  th.sort-hdr { cursor:pointer; user-select:none; }
+  th.sort-hdr:hover { background:#2E4B8F; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>🎯 Competency Gap Analysis</h1>
+    <p>Desired levels (from Functional Heads) vs. Current levels (from GET/MT self-assessments)</p>
+  </div>
+</div>
+
+<div class="container content-wrap">
+
+  <!-- Function selector -->
+  <div class="fn-tabs">
+    {% for key, label in functions %}
+      <a href="/admin-gap-analysis/?function={{ key }}"
+         class="fn-tab {% if key == fn_key %}active{% endif %}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  <!-- Summary KPIs -->
+  <div class="summary-grid">
+    <div class="sum-card">
+      <div class="sum-num" style="color:var(--jsw-navy)">{{ fhq_count }}</div>
+      <div class="sum-lbl">FHQ Responses</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-num" style="color:#0f766e">{{ get_count }}</div>
+      <div class="sum-lbl">GET Responses</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-num" style="color:#7c3aed">{{ mt_count }}</div>
+      <div class="sum-lbl">MT Responses</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-num" style="color:{% if avg_gap_get and avg_gap_get > 1 %}#dc2626{% elif avg_gap_get and avg_gap_get > 0 %}#d97706{% else %}#16a34a{% endif %}">
+        {% if avg_gap_get %}{{ avg_gap_get }}{% else %}—{% endif %}
+      </div>
+      <div class="sum-lbl">Avg GET Gap</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-num" style="color:{% if avg_gap_mt and avg_gap_mt > 1 %}#dc2626{% elif avg_gap_mt and avg_gap_mt > 0 %}#d97706{% else %}#16a34a{% endif %}">
+        {% if avg_gap_mt %}{{ avg_gap_mt }}{% else %}—{% endif %}
+      </div>
+      <div class="sum-lbl">Avg MT Gap</div>
+    </div>
+  </div>
+
+  {% if fhq_count == 0 or get_count == 0 %}
+  <div class="alert alert-info">
+    ℹ️ <strong>Awaiting data:</strong> Gap analysis requires at least 1 FHQ submission and 1 Self-Assessment for <strong>{{ fn_data.label }}</strong>.
+    Current status: {{ fhq_count }} FHQ, {{ get_count }} GET, {{ mt_count }} MT.
+  </div>
+  {% endif %}
+
+  <!-- Legend -->
+  <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:12px;font-weight:700;color:var(--text-mid)">Gap Legend:</span>
+    <span class="badge" style="background:#fef2f2;color:#991b1b;padding:4px 12px">🔴 High Gap (>1)</span>
+    <span class="badge" style="background:#fffbeb;color:#92400e;padding:4px 12px">🟡 Moderate Gap (0–1)</span>
+    <span class="badge" style="background:#f0fdf4;color:#166534;padding:4px 12px">🟢 No Gap (≤0)</span>
+    <span class="badge badge-tech" style="padding:4px 12px">— = Insufficient data</span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <a href="/admin-export/gap-analysis/?function={{ fn_key }}" class="btn btn-sm btn-primary">⬇ Export Gap Report</a>
+    </div>
+  </div>
+
+  <!-- Gap table -->
+  <div class="card">
+    <div class="card-header">
+      <span>{{ fn_data.icon }}</span>
+      <h2>{{ fn_data.label }} — Competency Gap Matrix</h2>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div style="overflow-x:auto">
+        <table id="gapTable">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th style="min-width:220px">Competency</th>
+              <th>Cat</th>
+              <th>Imp (FH)</th>
+              <th>Desired GET</th>
+              <th>Current GET</th>
+              <th class="sort-hdr">GET Gap ▲</th>
+              <th>Desired MT</th>
+              <th>Current MT</th>
+              <th class="sort-hdr">MT Gap ▲</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in analysis %}
+            <tr>
+              <td>
+                <strong style="color:var(--jsw-navy)">{{ a.code }}</strong>
+                {% if a.ev_critical %}<br><span class="badge badge-ev" style="font-size:9px">⚡ EV</span>{% endif %}
+              </td>
+              <td>
+                <strong>{{ a.name }}</strong>
+              </td>
+              <td>
+                <span class="badge {% if a.category == 'Technical' %}badge-tech{% else %}badge-behav{% endif %}">{{ a.category }}</span>
+              </td>
+              <td style="text-align:center">
+                {% if a.avg_imp %}<strong>{{ a.avg_imp }}</strong>/5{% else %}<span class="gap-none">—</span>{% endif %}
+              </td>
+              <!-- GET -->
+              <td style="text-align:center">
+                {% if a.avg_dget %}<strong>{{ a.avg_dget }}</strong>{% else %}<span class="gap-none">—</span>{% endif %}
+              </td>
+              <td style="text-align:center">
+                {% if a.avg_get %}<strong>{{ a.avg_get }}</strong>{% else %}<span class="gap-none">—</span>{% endif %}
+              </td>
+              <td style="text-align:center"
+                class="{% if a.gap_get %}{% if a.gap_get > 1 %}gap-high{% elif a.gap_get > 0 %}gap-mid{% else %}gap-low{% endif %}{% endif %}">
+                {% if a.gap_get is not None %}{{ a.gap_get }}{% else %}<span class="gap-none">—</span>{% endif %}
+              </td>
+              <!-- MT -->
+              <td style="text-align:center">
+                {% if a.avg_dmt %}<strong>{{ a.avg_dmt }}</strong>{% else %}<span class="gap-none">—</span>{% endif %}
+              </td>
+              <td style="text-align:center">
+                {% if a.avg_mt %}<strong>{{ a.avg_mt }}</strong>{% else %}<span class="gap-none">—</span>{% endif %}
+              </td>
+              <td style="text-align:center"
+                class="{% if a.gap_mt %}{% if a.gap_mt > 1 %}gap-high{% elif a.gap_mt > 0 %}gap-mid{% else %}gap-low{% endif %}{% endif %}">
+                {% if a.gap_mt is not None %}{{ a.gap_mt }}{% else %}<span class="gap-none">—</span>{% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-light)">No competency data available.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

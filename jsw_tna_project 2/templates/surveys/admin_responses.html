@@ -1,0 +1,120 @@
+{% extends 'surveys/base.html' %}
+{% block title %}{{ title }} — Admin | JSW Motors TNA{% endblock %}
+
+{% block extra_head %}
+<style>
+  .filter-bar {
+    background: var(--card-bg); border-radius: var(--radius); padding: 18px 24px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px;
+  }
+  .filter-bar label { font-size: 12px; font-weight: 700; color: var(--text-mid); margin-bottom: 0; }
+  .filter-bar select { width: auto; padding: 8px 12px; font-size: 13px; }
+  .detail-json { font-size: 11px; color: var(--text-mid); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>📋 {{ title }}</h1>
+    <p>{{ responses|length }} responses &nbsp;|&nbsp;
+       <a href="/admin-dashboard/" style="color:rgba(255,255,255,.7)">← Dashboard</a>
+    </p>
+  </div>
+</div>
+
+<div class="container content-wrap">
+
+  <!-- Filters & export -->
+  <div class="filter-bar">
+    <form method="GET" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;flex:1">
+      <div style="display:flex;align-items:center;gap:8px">
+        <label>Function:</label>
+        <select name="function" onchange="this.form.submit()">
+          <option value="">All Functions</option>
+          {% for key, label in functions %}
+            <option value="{{ key }}" {% if fn_filter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% if survey_type == 'self-assessment' %}
+      <div style="display:flex;align-items:center;gap:8px">
+        <label>Role:</label>
+        <select name="role" onchange="this.form.submit()">
+          <option value="">All Roles</option>
+          <option value="GET" {% if role_filter == 'GET' %}selected{% endif %}>GET</option>
+          <option value="MT"  {% if role_filter == 'MT' %}selected{% endif %}>MT</option>
+        </select>
+      </div>
+      {% endif %}
+    </form>
+    <div style="display:flex;gap:8px">
+      <a href="/admin-export/{{ survey_type }}/?function={{ fn_filter }}&role={{ role_filter }}" class="btn btn-sm btn-primary">⬇ Export Excel</a>
+      <a href="/admin-gap-analysis/?function={{ fn_filter }}" class="btn btn-sm btn-outline">🎯 Gap Analysis</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding:0">
+      <div style="overflow-x:auto">
+        {% if survey_type == 'fhq' %}
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Name</th><th>Emp Code</th><th>Function</th>
+              <th>Designation</th><th>Date</th><th>Comps Rated</th><th>Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in responses %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td><strong>{{ r.employee_name }}</strong></td>
+              <td>{{ r.employee_code }}</td>
+              <td>{{ r.get_function_display }}</td>
+              <td>{{ r.designation }}</td>
+              <td>{{ r.date }}</td>
+              <td><span class="badge badge-tech">{{ r.competency_ratings|length }} comps</span></td>
+              <td style="white-space:nowrap;font-size:12px;color:var(--text-mid)">{{ r.submitted_at|date:"d M Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-light)">No responses yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Name</th><th>Emp Code</th><th>Role</th><th>Function</th>
+              <th>Date</th><th>Avg Score</th><th>Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in responses %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td><strong>{{ r.employee_name }}</strong></td>
+              <td>{{ r.employee_code }}</td>
+              <td><span class="badge {% if r.role == 'GET' %}badge-ev{% else %}badge-behav{% endif %}">{{ r.role }}</span></td>
+              <td>{{ r.get_function_display }}</td>
+              <td>{{ r.date }}</td>
+              <td>
+                <strong style="color:var(--jsw-navy)">{{ r.avg_rating }}</strong>
+                <span style="font-size:11px;color:var(--text-light)">/5.0</span>
+              </td>
+              <td style="white-space:nowrap;font-size:12px;color:var(--text-mid)">{{ r.submitted_at|date:"d M Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-light)">No responses yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

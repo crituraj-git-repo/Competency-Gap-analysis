@@ -1,0 +1,22 @@
+{% extends 'surveys/base.html' %}
+{% block title %}Submitted — JSW Motors TNA{% endblock %}
+{% block content %}
+<div style="min-height:calc(100vh - 130px);display:flex;align-items:center;justify-content:center;background:var(--page-bg)">
+  <div style="text-align:center;max-width:540px;padding:40px">
+    <div style="font-size:72px;margin-bottom:20px">{{ icon }}</div>
+    <div style="background:var(--card-bg);border-radius:20px;padding:48px;box-shadow:var(--shadow);border:1px solid var(--border)">
+      <div style="display:inline-block;background:#d1fae5;color:#065f46;font-size:13px;font-weight:700;padding:6px 18px;border-radius:20px;margin-bottom:20px">
+        ✓ Successfully Submitted
+      </div>
+      <h1 style="font-size:26px;font-weight:800;color:var(--jsw-navy);margin-bottom:12px">Thank You!</h1>
+      <p style="color:var(--text-mid);font-size:15px;line-height:1.7;margin-bottom:28px">
+        Your <strong>{{ title }}</strong> has been recorded. The L&D team will use your inputs to build a precise competency training plan for JSW Motors.
+      </p>
+      <div style="background:var(--jsw-light);border-radius:12px;padding:20px;margin-bottom:28px;font-size:13px;color:var(--jsw-navy)">
+        🎯 Your response contributes to the <strong>JSW Motors Competency TNA Framework</strong> — enabling targeted, KPI-aligned learning interventions across all functions.
+      </div>
+      <a href="/" class="btn btn-primary btn-lg">← Back to Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
